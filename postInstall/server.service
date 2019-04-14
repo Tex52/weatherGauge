@@ -1,0 +1,21 @@
+[Unit]
+Description=weatherGauge
+Wants=rgMan.service
+After=rgMan.service
+
+[Service]
+Type=dbus
+BusName=com.weatherGauge
+ExecStart=/usr/local/bin/node /opt/rGauge/gList/weatherGauge/app.js
+Restart=on-failure
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=weatherGauge
+User=rgservice
+Group=irdclient
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=NODE_ENV=production
+WorkingDirectory=/opt/rGauge/gList/weatherGauge
+
+[Install]
+WantedBy=multi-user.target

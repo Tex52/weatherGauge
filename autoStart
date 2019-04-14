@@ -1,0 +1,6 @@
+# This bash file is called by pi.service 
+echo "system startup"
+echo ".............. System Startup ............." >> /home/pi/WeatherUndergroundGauge/webInterface/public/logs/bootUpdate.txt
+date >> /home/pi/WeatherUndergroundGauge/webInterface/public/logs/bootUpdate.txt
+echo "" >> /home/pi/WeatherUndergroundGauge/webInterface/public/logs/bootUpdate.txt
+sudo /usr/local/bin/node /home/pi/WeatherUndergroundGauge/app.js

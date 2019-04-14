@@ -1,0 +1,36 @@
+{"systemCfg":{
+    "wuAPIKey":"",
+    "wuPws":"KILJERSE5",
+    "dfaltViewNum":"0",
+    "alphaNumBright":15,
+    "alphaNumDim":0,
+    "faceBright":31,
+    "faceDim":1,
+    "displayBrightStart":"Fri Sep 09 2016 08:30:00 GMT-0500 (Central Daylight Time)",
+    "displayBrightEnd":"Fri Sep 09 2016 16:30:00 GMT-0500 (Central Daylight Time)",
+    "displayBrightStartAtSunrise":true,
+    "displayBrightEndAtSunset":true,    
+    "quietTimeStart":"Fri Sep 09 2016 21:30:00 GMT-0500 (Central Daylight Time)",
+    "quietTimeEnd":"Fri Sep 09 2016 06:00:00 GMT-0500 (Central Daylight Time)",
+    "soundVolumeQT":0,
+    "qtAnimationEnable":false,    
+    "qtFaceLightEnable":true,
+    "qtGaugeDisplayEnable":true,
+    "soundVolume":80,
+    "latitude":"39.0971",
+    "longitude":"-90.3148",
+    "soundEnable":true,
+    "faceLightEnable":true,
+    "gaugeDisplayEnable":true,
+    "apiMaxCallDelay":900,
+    "apiCallsPerDay":480
+    },
+"colorCfg":{
+    "faceplateNormal":[31,255,108,23],
+    "faceplateGetData":[31,255,108,23],
+    "faceplateAlert":[31,255,1,1]
+    },
+"acctManagement":{
+    "passHash":"$2a$10$9RP1VOtlebHdfCxi8TvRE.Rmjh2el2vT5XRKzQkCwFWhJ//H/os/O"
+    }
+}
