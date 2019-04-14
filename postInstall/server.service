@@ -11,8 +11,8 @@ Restart=on-failure
 StandardOutput=syslog
 StandardError=syslog
 SyslogIdentifier=weatherGauge
-User=rgservice
-Group=irdclient
+User=rgadmin
+Group=rgadmin
 Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 Environment=NODE_ENV=production
 WorkingDirectory=/opt/rGauge/gList/weatherGauge
