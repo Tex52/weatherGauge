@@ -1,6 +1,6 @@
 {
-  "name": "wug-gauge2019",
-  "version": "2.0.1",
+  "name": "weather-gauge",
+  "version": "0.0.1",
   "description": "Displays weather information from weather underground on Raspberry Pi based gauge.  See http://github.com/RuckerGauge.com for details",
   "main": "app.js",
   "dependencies": {
@@ -16,11 +16,12 @@
   },
   "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "./postInstall/installAsService.sh"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/RuckerGauge/WeatherUndergroundGauge2019.git"
+    "url": "git+https://github.com/RuckerGauge/weatherGauge.git"
   },
   "author": "John Rucker",
   "license": "ISC",
