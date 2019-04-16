@@ -36,7 +36,7 @@ class appManager extends EventEmitter{
         this.status = 'ipl, ' + (new Date()).toLocaleTimeString() + ', ' + (new Date()).toLocaleDateString();
         this.value = 'Not Set Yet';
         this._okToSend = true;
-        this.bPrl = new BLEperipheral(this.config.dBusName, this.config.uuid, this._bleConfig, false);
+        this.bPrl = new BLEperipheral(this.config.dBusName, this.config.uuid, self._bleConfig, false);
         self = this;  
 
         this.bPrl.on('ConnectionChange', (connected)=>{
