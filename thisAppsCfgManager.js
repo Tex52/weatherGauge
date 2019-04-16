@@ -219,9 +219,9 @@ class appManager extends EventEmitter{
                 var x = {[keysArry[arg1]]:this.config[keysArry[arg1]]}
                 var mOB = JSON.stringify(x) 
                 console.log("Request for record " + arg1)
-                console.dir(mOB,{depth:null})
+                console.dir(x,{depth:null})
         
-                this.readConfig.setValue(JSON.stringify(mOB));
+                this.readConfig.setValue(mOB);
                 this.readConfig.notify();
             } else {
                 console.log('Warnning: gaugeConfig request for record out of range.  Requested record = ' + arg1);
