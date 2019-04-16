@@ -110,13 +110,6 @@ class appManager extends EventEmitter{
         };
     };
 
-    /** This is a blank method that can be extended. 
-     * This method will be called after _bleMasterConfig() allowing custom characteristics to be added.
-     */
-    bleMyConfig(){
-        console.log('bleMyConfig not extended, there will not be any unique app characteristics set.  Using defaults only.');
-    };
-
     /** Saves custom config items to the config file located in modifiedConfigMasterPath 
      * Item to be saved should be in key:value format.  For example to seave the IP address of a device call this method with
      * saveItem({webBoxIP:'10.10.10.12});
@@ -148,11 +141,6 @@ class appManager extends EventEmitter{
     };
 
     _bleConfig(DBus){
-        self._bleMasterConfig();
-        self.bleMyConfig();
-    }
-
-    _bleMasterConfig(){
         //this.bPrl.logCharacteristicsIO = true;
         //this.bPrl.logAllDBusMessages = true;
         console.log('Initialize charcteristics...')
@@ -160,7 +148,7 @@ class appManager extends EventEmitter{
         this.gaugeStatus =  this.bPrl.Characteristic('002d6a44-2551-4342-83c9-c18a16a3afa5', 'gaugeStatus', ["encrypt-read","notify"]);
         this.gaugeValue =   this.bPrl.Characteristic('003d6a44-2551-4342-83c9-c18a16a3afa5', 'gaugeValue', ["encrypt-read","notify"]);
         this.gaugeCommand = this.bPrl.Characteristic('004d6a44-2551-4342-83c9-c18a16a3afa5', 'gaugeCommand', ["encrypt-read","encrypt-write"]);
-        this.gaugeConfig =  this.bPrl.Characteristic('005d6a44-2551-4342-83c9-c18a16a3afa5', 'gaugeConfig', ["encrypt-read"]);
+        this.gaugeConfig =  this.bPrl.Characteristic('005d6a44-2551-4342-83c9-c18a16a3afa5', 'gaugeConfig', ["encrypt-read","encrypt-write","notify"]);
     
         console.log('Registering event handlers...');
         this.gaugeCommand.on('WriteValue', (device, arg1)=>{
@@ -204,6 +192,37 @@ class appManager extends EventEmitter{
         this.appVer.on('ReadValue', (device) =>{
             console.log(device + ' requesting app version')
             this.appVer.setValue((JSON.parse(fs.readFileSync('package.json'))).version);
+        })
+
+        this.gaugeConfig.on('WriteValue', (device, arg1)=>{
+            /**
+             * This characteristc will read large amounts of data by sending items in an array one record at a time.  
+             * Write a "?" to the characteristic and it will return the number of records in the array.
+             * Then write the number of the record you would like to receive. 
+             */
+            console.log(device + ', is writing to gaugeConfig ' + arg1);
+            var keysArry = [];
+            keysArry = Object.keys(this.config);
+            var keysCnt = keysArry.length;
+
+            if(arg1.toString() == "?"){
+                    console.log('gaugeConfig request for record count returning ' + keysCnt);
+                    gaugeConfig.setValue(keysCnt.toString());
+                    gaugeConfig.notify()
+              } else if (arg1 >= 0 && arg1 <= keysCnt){
+                    var x = {[keysArry[arg1]]:this.config[keysArry[arg1]]}
+                    var mOB = JSON.stringify(x) 
+                    console.log("Request for record " + arg1)
+                    console.dir(mOB,{depth:null})
+          
+                    gaugeConfig.setValue(JSON.stringify(mOB));
+                    gaugeConfig.notify();
+              } else {
+                    console.log('Warnning: gaugeConfig request for record out of range.  Requested record = ' + arg1);
+              };
+
+
+
         })
         
         console.log('setting default characteristic values...');
