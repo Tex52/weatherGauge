@@ -212,16 +212,16 @@ class appManager extends EventEmitter{
 
             if(arg1.toString() == "?"){
                     console.log('gaugeConfig request for record count returning ' + keysCnt);
-                    gaugeConfig.setValue(keysCnt.toString());
-                    gaugeConfig.notify()
+                    this.gaugeConfig.setValue(keysCnt.toString());
+                    this.gaugeConfig.notify()
               } else if (arg1 >= 0 && arg1 <= keysCnt){
                     var x = {[keysArry[arg1]]:this.config[keysArry[arg1]]}
                     var mOB = JSON.stringify(x) 
                     console.log("Request for record " + arg1)
                     console.dir(mOB,{depth:null})
           
-                    gaugeConfig.setValue(JSON.stringify(mOB));
-                    gaugeConfig.notify();
+                    this.gaugeConfig.setValue(JSON.stringify(mOB));
+                    this.gaugeConfig.notify();
               } else {
                     console.log('Warnning: gaugeConfig request for record out of range.  Requested record = ' + arg1);
               };
@@ -233,7 +233,7 @@ class appManager extends EventEmitter{
         console.log('setting default characteristic values...');
         this.gaugeValue.setValue(this.value);
         this.gaugeStatus.setValue(this.status)
-        this.gaugeConfig.setValue(JSON.stringify(this.config));
+        //this.gaugeConfig.setValue(JSON.stringify(this.config));
     };
 
 };
