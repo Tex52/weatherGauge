@@ -135,7 +135,7 @@ class appManager extends EventEmitter{
             this.modifiedConfigMaster = JSON.parse(fs.readFileSync(this.modifiedConfigFilePath))
         };
         this.config = {...this.defaultConfigMaster, ...this.modifiedConfigMaster};
-        this.gaugeConfig.setValue(JSON.stringify(this.config));
+        this.readConfig.setValue(JSON.stringify(this.config));
         console.log('firing "Update" event...');
         this.emit('Update');
     };
@@ -153,7 +153,8 @@ class appManager extends EventEmitter{
         this.gaugeStatus =  this.bPrl.Characteristic('002d6a44-2551-4342-83c9-c18a16a3afa5', 'gaugeStatus', ["encrypt-read","notify"]);
         this.gaugeValue =   this.bPrl.Characteristic('003d6a44-2551-4342-83c9-c18a16a3afa5', 'gaugeValue', ["encrypt-read","notify"]);
         this.gaugeCommand = this.bPrl.Characteristic('004d6a44-2551-4342-83c9-c18a16a3afa5', 'gaugeCommand', ["encrypt-read","encrypt-write"]);
-        this.gaugeConfig =  this.bPrl.Characteristic('005d6a44-2551-4342-83c9-c18a16a3afa5', 'gaugeConfig', ["encrypt-read","encrypt-write","notify"]);
+        this.readConfig =   this.bPrl.Characteristic('3ddc0611-272e-4669-80b4-6989687eb1dd', 'readConfig', ["encrypt-read","encrypt-write","notify"]);
+        this.writeConfig =  this.bPrl.Characteristic('8f92ddf7-dbf2-481d-8e9f-14f37ca7dcef', 'writeConfig', ["encrypt-write"]);
     
         console.log('Registering event handlers...');
         this.gaugeCommand.on('WriteValue', (device, arg1)=>{
@@ -199,7 +200,7 @@ class appManager extends EventEmitter{
             this.appVer.setValue((JSON.parse(fs.readFileSync('package.json'))).version);
         })
 
-        this.gaugeConfig.on('WriteValue', (device, arg1)=>{
+        this.readConfig.on('WriteValue', (device, arg1)=>{
             /**
              * This characteristc will read large amounts of data by sending items in an array one record at a time.  
              * Write a "?" to the characteristic and it will return the number of records in the array.
@@ -211,24 +212,28 @@ class appManager extends EventEmitter{
             var keysCnt = keysArry.length;
 
             if(arg1.toString() == "?"){
-                    console.log('gaugeConfig request for record count returning ' + keysCnt);
-                    this.gaugeConfig.setValue(keysCnt.toString());
-                    this.gaugeConfig.notify()
-              } else if (arg1 >= 0 && arg1 <= keysCnt){
-                    var x = {[keysArry[arg1]]:this.config[keysArry[arg1]]}
-                    var mOB = JSON.stringify(x) 
-                    console.log("Request for record " + arg1)
-                    console.dir(mOB,{depth:null})
-          
-                    this.gaugeConfig.setValue(JSON.stringify(mOB));
-                    this.gaugeConfig.notify();
-              } else {
-                    console.log('Warnning: gaugeConfig request for record out of range.  Requested record = ' + arg1);
-              };
+                console.log('gaugeConfig request for record count returning ' + keysCnt);
+                this.readConfig.setValue(keysCnt.toString());
+                this.readConfig.notify()
+            } else if (arg1 >= 0 && arg1 <= keysCnt){
+                var x = {[keysArry[arg1]]:this.config[keysArry[arg1]]}
+                var mOB = JSON.stringify(x) 
+                console.log("Request for record " + arg1)
+                console.dir(mOB,{depth:null})
+        
+                this.readConfig.setValue(JSON.stringify(mOB));
+                this.readConfig.notify();
+            } else {
+                console.log('Warnning: gaugeConfig request for record out of range.  Requested record = ' + arg1);
+            };
+        });
 
-
-
-        })
+        writeConfig.on('WriteValue', (device, arg1)=>{
+            //arg1 = {"key":"value"} to be saved in modifiedConfig.json
+            console.log(device + ', is saving new gauge value ' + arg1);
+            var pObj = JSON.parse(arg1);    
+            this.saveItem(pObj);
+        });
         
         console.log('setting default characteristic values...');
         this.gaugeValue.setValue(this.value);
