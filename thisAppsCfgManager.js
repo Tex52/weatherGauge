@@ -228,7 +228,7 @@ class appManager extends EventEmitter{
             };
         });
 
-        writeConfig.on('WriteValue', (device, arg1)=>{
+        this.writeConfig.on('WriteValue', (device, arg1)=>{
             //arg1 = {"key":"value"} to be saved in modifiedConfig.json
             console.log(device + ', is saving new gauge value ' + arg1);
             var pObj = JSON.parse(arg1);    
@@ -238,7 +238,7 @@ class appManager extends EventEmitter{
         console.log('setting default characteristic values...');
         this.gaugeValue.setValue(this.value);
         this.gaugeStatus.setValue(this.status)
-        //this.gaugeConfig.setValue(JSON.stringify(this.config));
+        this.readConfig.setValue(Object.keys(this.config).length);
     };
 
 };
