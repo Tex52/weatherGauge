@@ -238,7 +238,7 @@ class appManager extends EventEmitter{
         console.log('setting default characteristic values...');
         this.gaugeValue.setValue(this.value);
         this.gaugeStatus.setValue(this.status)
-        this.readConfig.setValue(Object.keys(this.config).length);
+        this.readConfig.setValue(Object.keys(this.config).length.toString());
     };
 
 };
