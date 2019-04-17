@@ -524,8 +524,8 @@ function sendStatusToMyCfg(ovrRdMsg, ovrRdCat, ovrRdCatTxt ){      // send gauge
 
     var stateMsg = ovrRdMsg || ''
     if(stateMsg == ''){
-        myCfg.setGaugeStatus('Value not set');
-        myCfg.setGaugeValue(wxData.wxObj.temp_f + 'F');
+        myCfg.setGaugeStatus('Okay, ' + (new Date()).toLocaleTimeString() + ', ' + (new Date()).toLocaleDateString());
+        myCfg.setGaugeValue(wxData.wxObj.temp_f + 'F, ' + (new Date()).toLocaleTimeString() + ', ' + (new Date()).toLocaleDateString());
     } else {
         myCfg.setGaugeStatus(stateMsg)
     }
