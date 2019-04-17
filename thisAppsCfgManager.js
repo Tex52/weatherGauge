@@ -6,9 +6,9 @@ var self;
 
 /**
  * This class provides an interface to the gauge’s factory default configuration settings. Typically, these settings are stored in a file called gaugeConfig.json, with user modifications to the factory defaults in a file called modifiedConfig.json. 
- * This class also provides a frontend to the irdTxClass and  blePeripheral class in the setGaugeStatus and setGaugeValue methods.
+ * This class also provides a frontend to the blePeripheral class in the setGaugeStatus and setGaugeValue methods.
  * 
- * ** * gaugConfig.json must have key fields such as UUID and dBusName and conform to a JSON format.  See the README.md for details or the smaple file located in ./samples/sample_gaugeConfig.json **
+ * ** * gaugConfig.json must have key fields such as UUID and dBusName and conform to a JSON format.  emits Update when config has been changed **
  * 
  * typical setup call ->const myAppMan = new AppMan(__dirname + '/gaugeConfig.json', __dirname + '/modifiedConfig.json');<-
  * 

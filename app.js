@@ -15,7 +15,12 @@ var wxDta =             require('wugdatafetcher');
 const MyCfg =   require("./thisAppsCfgManager.js")
 
 
-var myCfg = new MyCfg(__dirname + '/thisAppsCfgMaster.json', __dirname + '/thisAppsCfg.json')
+var myCfg = new MyCfg(__dirname + '/thisAppsCfgMaster.json', __dirname + '/thisAppsCfg.json');
+
+myCfg.on('Update', ()=>{
+    console.log("Config has been updated!  Reloading....");
+    reloadConfigFile();
+})
 
 // class and object setup
 const I2cAddress = {bankCnt:4, alphNum1:0x70, alphNum2:0x71, alphNum3:0x72, alphNum4:0x73 };
@@ -34,12 +39,7 @@ const mtrA = new stepper(mtrAPins, stprCal.wg_temperature)
 console.log('stepper setup! Move to position 25');
 mtrA.setValue(25);
 
-//console.log('loading WEB Interface child process...');
-//var webInterface = cp.fork('./server.js', [], {cwd:'./webInterface'});
-var cfg = JSON.parse(fs.readFileSync('./rGaugeConfig.json'));
-
 console.log('Setting up weather underground data class');
-//console.log('API Key = ' + cfg.systemCfg.wuAPIKey +', Station ID = ' + cfg.systemCfg.wuPws + ', Interval = '+ cfg.systemCfg.apiMaxCallDelay);
 console.log('API Key = ' + myCfg.config.wuAPIKey +', Station ID = ' + myCfg.config.wuPws + ', Interval = '+ myCfg.config.apiMaxCallDelay);
 
 const wxData = new wxDta(myCfg.config.wuAPIKey, myCfg.config.wuPws, myCfg.config.apiMaxCallDelay);
@@ -51,13 +51,11 @@ wxData.getRainHistory(myCfg.config.wuAPIKey, myCfg.config.wuPws, 7);
 // Global Vars
 var apiCallRate = myCfg.config.apiMaxCallDelay;            // Time in seconds of normal poll interveral
 var apiCallCount = 0;
-var eventEmitter = new events.EventEmitter();
 var dfaltViewNum = Number(myCfg.config.dfaltViewNum);
 var firstRun = 1;
 var BTN1pin = 15;                                           // (Button connected to this pin and ground)
 var LED1pin = 13;                                           // (LED connected to 240 ohm resistor)
 var Buzzerpin = 31;                                         // Pin connected Pizeo buzzer
-var iplActive = true;
 var sunriseTime;
 var sunsetTime;
 var cronHourlyReport = null;
@@ -65,15 +63,10 @@ var cronBrightStart = null;
 var cronBrightEnd = null;
 var cronQuietTimeStart = null;
 var cronQuietTimeEnd = null;
-var soundVolume = myCfg.config.soundVolume;                // Volume not used at this time. Stubbed in for future use.
-var soundVolumeLast;
 var alphaNumBrightnessLast;                                 // Global to hold last brightness setting sent to AlphaNumeric
 var alphaNumOnLast = true;
 var faceLightBrightnessLast;                                // Global to hold last brightness setting for LED Ring (face light)
 var faceLightOnLast = true;
-var inQuietModeStatus = false;
-var inNightModeStatus = false;
-var inWxAlert = false;
 var dataFetchStartTime = new Date();
 var lastDataFetchStartTime = new Date();
 
@@ -91,13 +84,13 @@ rpio.open(Buzzerpin, rpio.OUTPUT, rpio.LOW);
 console.log("Setting button input on pin has been disabled " + BTN1pin);
 //rpio.open(BTN1pin, rpio.INPUT, rpio.PULL_UP);        // setup pin for input use internal pull up resistor
 //rpio.poll(BTN1pin, pollcb1);
-LED1setOnOff(1);
+//LED1setOnOff(1);
 
 alphNumA.setBright(Number(myCfg.config.alphaNumBright));
 alphaNumBrightnessLast = myCfg.config.alphaNumBright;
 
-console.log('Setting speaker volume to ' + soundVolume + '%' );
-setVolume(soundVolume);
+//console.log('Setting speaker volume to ' + soundVolume + '%' );
+//setVolume(soundVolume);
 
 ledStA.setAll(10,255,255,255);
 
@@ -115,19 +108,8 @@ function showData(viewNum){                 // set the display face to various s
     var rainSum = 0
     rainSum = lastRainEventTotal(wxData.wxObj.history.rainDaysOld);
     console.log ('showLvl called at ' + dateTime.toTimeString());
-    /*
-    if(wxData.wxObj.alertDescription!="" && inWxAlert == false){
-        inWxAlert = true;
-        hourleyAlertReport();
-    }
-    if(wxData.wxObj.alertDescription==""){
-        inWxAlert = false;
-        setFaceColor(cfg.colorCfg.faceplateNormal)
-    } else {
-        setFaceColor(cfg.colorCfg.faceplateAlert)
-    }   
-    */
-   setFaceColor(cfg.colorCfg.faceplateNormal)
+
+   setFaceColor([31,255,108,23])
     if (firstRun == 1){
         alphNumA.tickerPrint8('NAME = ' + wxData.wxObj.location_txt.toString().toUpperCase() + ' ID = ' + wxData.wxObj.station_id, 150);
         firstRun = 0;
@@ -171,52 +153,16 @@ function showData(viewNum){                 // set the display face to various s
     }       
 }
 
-function hourleyAlertReport(){              // report to run every hour displaying river status
-    /*
-    if(wxData.wxObj.alertDescription==""){
-        console.log('No horley alert to report.');
-        return;        
-    }
-    
-
-    alphNumA.prnStrToBank('****', 1);
-    alphNumA.prnStrToBank('****', 2);
-    alphNumA.prnStrToBank('ALRT', 3);
-    alphNumA.prnStrToBank(' '+ wxData.wxObj.alertType, 4);        
-    var dateTime = new Date();
-    console.log ('Hourly alert report run ' + dateTime.toString());
-    if (_animation()){
-        if(_faceLight()){
-            ledStA.sparkleAsync(20, 255, 0, 0, -1, function(){});
-        }
-        buzzer(200);
-        rpio.msleep(75);
-        buzzer(200);
-    } else { 
-        setFaceColor(cfg.colorCfg.faceplateAlert);
-    }
-
-    var alrtMsg = wxData.wxObj.alertDescription.toString().toUpperCase();
-    alrtMsg+= ' UNTIL ' + wxData.wxObj.alertExpires.toString().toUpperCase();
-                  
-    alphNumA.tickerPrint8(alrtMsg, 150);
-    setFaceColor(cfg.colorCfg.faceplateAlert);
-    alphNumA.tickerPrint8("REPEATING", 150);
-    alphNumA.tickerPrint8(alrtMsg, 150);    
-    showData(dfaltViewNum);
-    */
-}
-
 /* Data --------------------------------------------------------------------------------------------------------------------------------------*/
 function cb_startingWxDataFetch(dateObj){   // called when wxData makes request for new data. 
     var timeIt = new Date(dateObj);  
     dataFetchStartTime = timeIt 
     //console.log('\nGetting Weather Data...');
-    LED1setOnOff(1);         // turn LED in button on
+    //LED1setOnOff(1);         // turn LED in button on
     if(_faceLight() && _animation()){
-        ledStA.walkPatternAsync([cfg.colorCfg.faceplateGetData,cfg.colorCfg.faceplateGetData,cfg.colorCfg.faceplateGetData], 0, 10, 50, function(errNumber, errTxt, value){
+        ledStA.walkPatternAsync([[31,255,108,23],[31,255,108,23],[31,255,108,23]], 0, 10, 50, function(errNumber, errTxt, value){
             if(errNumber == 0){
-                ledStA.walkPatternAsync([cfg.colorCfg.faceplateGetData,cfg.colorCfg.faceplateGetData,cfg.colorCfg.faceplateGetData], 0, 50, 0, function(){});
+                ledStA.walkPatternAsync([[31,255,108,23],[31,255,108,23],[31,255,108,23]], 0, 50, 0, function(){});
             } 
         });  
     }    
@@ -229,15 +175,13 @@ function cb_newWxData(){                    // called wxData receives new weathe
     var secondsBetweenCalls = dataFetchStartTime - lastDataFetchStartTime;
     lastDataFetchStartTime = dataFetchStartTime;
     console.log(' New WX Data: call count = '+ apiCallCount +', RTT = '+ callTime +' milliseconds, call interval = ' + secondsBetweenCalls.valueOf() / 1000 +', goal = '+ apiCallRate);
-    //console.log(wxData.wxObj);
-    LED1setOnOff(0);
     ledStA.killIfBusy();    
-    sendStatusToWeb();
+    sendStatusToMyCfg();
     showData(dfaltViewNum)           
 }
 
 function cb_wxDataFetchError(errNum, errTxt){   // called if wxData fetch is in error
-    LED1setOnOff(0);
+    //LED1setOnOff(0);
     ledStA.killIfBusy();
     ledStA.setAll(5,255,0,0);
 
@@ -245,7 +189,7 @@ function cb_wxDataFetchError(errNum, errTxt){   // called if wxData fetch is in 
     console.log('\tError Number = ' + errNum);
     console.log('\t'+ errTxt + '\n');
 
-    sendStatusToWeb('There was an error getting forecast data. Make sure your weather underground API key and station ID are correct, error number: ' + errNum +', '+ errTxt, 'danger', 'ERROR Getting WX Data <hr>');  
+    sendStatusToMyCfg('There was an error getting forecast data. Make sure your weather underground API key and station ID are correct, error number: ' + errNum +', '+ errTxt, 'danger', 'ERROR Getting WX Data <hr>');  
 }
 
 /* Utilities   -------------------------------------------------------------------------------------------------------------------------------*/
@@ -317,7 +261,7 @@ function countDownToFirstUpload(){          // Used during IPL to display count 
     if (countDownSeconds <= 0 ){
         clearInterval(countDownTimer);      // stop timmer
 
-        sendStatusToWeb('Gauge powerup complete. Getting gauge data from Internet please wait...');
+        sendStatusToMyCfg('Gauge powerup complete. Getting gauge data from Internet please wait...');
         iplActive = false;
         _alphanumeric();
         _faceLight();
@@ -363,7 +307,7 @@ function startCronJobs(){                   // start and stop cron jobs as their
         console.log('--------------------------------------------------------------');
         console.log('----> cronBrightStart fired at: ' + rightNow.toTimeString());
         console.log('--------------------------------------------------------------');
-        sendStatusToWeb();         
+        sendStatusToMyCfg();         
         showData(dfaltViewNum); 
     }, null, true);
 
@@ -380,7 +324,7 @@ function startCronJobs(){                   // start and stop cron jobs as their
         console.log('--------------------------------------------------------------');
         console.log('----> cronBrightEnd fired at: ' + rightNow.toTimeString());
         console.log('--------------------------------------------------------------');         
-        sendStatusToWeb(); 
+        sendStatusToMyCfg(); 
         showData(dfaltViewNum);
     }, null, true);
 
@@ -394,7 +338,7 @@ function startCronJobs(){                   // start and stop cron jobs as their
         console.log('--------------------------------------------------------------');
         console.log('----> cronQuietTimeStart fired at: ' + rightNow.toTimeString());
         console.log('--------------------------------------------------------------');  
-        sendStatusToWeb();        
+        sendStatusToMyCfg();        
         showData(dfaltViewNum);
     }, null, true);
 
@@ -408,7 +352,7 @@ function startCronJobs(){                   // start and stop cron jobs as their
         console.log('--------------------------------------------------------------');
         console.log('----> cronQuietTimeEnd fired at: ' + rightNow.toTimeString());
         console.log('--------------------------------------------------------------');         
-        sendStatusToWeb(); 
+        sendStatusToMyCfg(); 
         showData(dfaltViewNum);
     }, null, true);
 }
@@ -483,24 +427,6 @@ function _faceLight(){                      // Returns true if it is okay to sen
     return true;    
 }
 
-function _speaker(){                        // Returns true if it is okay to play wave and sets volume
-    if(myCfg.config.soundEnable=='false'){
-        console.log('_speaker = disabled');
-        return(false); // sound is disabled retrun false assuming noting is playing
-    }
-    // if logic makes it to this point it is okay to make sound, need to determine volume level:
-    if(inQuietMode()){
-        if(soundVolumeLast != myCfg.config.soundVolumeQT){
-            setVolume(Number(myCfg.config.soundVolumeQT));
-        }
-    } else {
-        if(soundVolumeLast != myCfg.config.soundVolume){
-            setVolume(Number(myCfg.config.soundVolume));
-        }  
-    }
-    return true;    
-}
-
 function inQuietMode(){                     // Determine if system should be in quiet mode based on time settings in systemCfg
     var now = new Date();
     var quietStart = new Date(myCfg.config.quietTimeStart);   
@@ -568,55 +494,6 @@ function inNightMode(){                     // Determine if system should be in 
     }
 }
 
-function buzzer(onTimeMS){                  // Makes a beep, beep sound 
-    if(_speaker()){
-        rpio.write(Buzzerpin, rpio.HIGH);
-        rpio.msleep(onTimeMS);
-        rpio.write(Buzzerpin, rpio.LOW);    
-    } else {
-        console.log('skipping buzzer play as sound is disabled in config file');
-    }
-}
-
-function setVolume(volumePercent){          // set pi volume using amixer shell command
-    cp.exec('/usr/bin/amixer sset "PCM" ' + volumePercent +'%', (error, stdout, stderr) => {        
-        if (error) {
-            console.log('ERROR setting volume, error = ' + error);
-        }
-        console.log('setVolume fired: ' + volumePercent);
-        soundVolumeLast = volumePercent
-    });    
-}
-
-function LED1setOnOff(intOnOff){            // turn led in push button on or off
-    if (intOnOff == 1){
-        rpio.write(LED1pin, rpio.HIGH);
-    } else {
-        rpio.write(LED1pin, rpio.LOW);
-    }
-}
-
-function pollcb1(cbpin){                    // function called by RPIO to poll push button on back of display
-	buttonState = rpio.read(cbpin) ? 'released':'pressed';   
-	console.log('Button 1 event on P%d (button currently %s)', cbpin, buttonState);
-    if (iplActive == false){        // during bootup ignore button 
-        if(buttonState == 'released'){
-            LED1setOnOff(0);
-            rpio.write(Buzzerpin, rpio.LOW);
-            console.log('Button polling stopped');
-            rpio.poll(BTN1pin, null);                   // This is needed as a workaround to the button being noresponsive
-            eventEmitter.emit('fireBtnEvent');
-            rpio.poll(BTN1pin, pollcb1);
-            console.log('Button polling restarted');
-        } else if (buttonState == 'pressed'){
-            LED1setOnOff(1);
-            rpio.write(Buzzerpin, rpio.HIGH);
-        }
-    } else {
-        console.log("Button pushed detected during IPL, ignoring push.");
-    }
-}
-
 function updateSunsetSunrise(){             // Sets global sunriseTime and sunsetTime 
     var lat = Number(myCfg.config.latitude);
     var long = Number(myCfg.config.longitude);    
@@ -628,10 +505,8 @@ function updateSunsetSunrise(){             // Sets global sunriseTime and sunse
     console.log('New times for sunrise ' + sunriseTime.toTimeString() + ' and sunset ' + sunsetTime.toTimeString());
 }
 
-/* Web Communications ------------------------------------------------------------------------------------------------------------------------*/
 function reloadConfigFile(){                // reread rGaugeConfig.json to make new values current
     console.log(`Reloading config file.`);
-    cfg = JSON.parse(fs.readFileSync('./rGaugeConfig.json'));
     dfaltViewNum = Number(myCfg.config.dfaltViewNum);
     startCronJobs();  
     _alphanumeric();
@@ -639,25 +514,21 @@ function reloadConfigFile(){                // reread rGaugeConfig.json to make 
     showData(dfaltViewNum);
 }
 
-function sendStatusToWeb(ovrRdMsg, ovrRdCat, ovrRdCatTxt ){      // send gauge values to web for display
+function sendStatusToMyCfg(ovrRdMsg, ovrRdCat, ovrRdCatTxt ){      // send gauge values to web for display
     /*
     If ovrRdMsg exist it will be displayed insted of normal system status
     ovrRdMsg: message string to display
     ovrRdCat: can be success, info, warning, danger.  Defaults to info.
     ovrRdCatTxt: Will be highlighted as strong text at beginging of ovrRdMsg 
     */
-    var statusObject = {
-        ovrRdMsg:ovrRdMsg || '',
-        ovrRdCat:ovrRdCat || '',
-        ovrRdCatTxt:ovrRdCatTxt || '',
-        inQuietModeStatus:inQuietModeStatus,
-        inNightModeStatus:inNightModeStatus,
-        appVer:package.version,
-        wuPws:myCfg.config.wuPws,
-        apiCallRate:apiCallRate,
-        weatherObj:wxData.wxObj
-    };
-    //webInterface.send({methodToCall:'newGaugeStatus', arg1:statusObject})
+
+    var stateMsg = ovrRdMsg || ''
+    if(stateMsg == ''){
+        myCfg.setGaugeStatus('Value not set');
+        myCfg.setGaugeValue(wxData.wxObj.temp_f + 'F');
+    } else {
+        myCfg.setGaugeStatus(stateMsg)
+    }
 }
 
 
@@ -672,105 +543,6 @@ function shutDown(){
     alphNumA.prnStrCntrd8("OFF-LINE");
     console.log("Exit message sent to LED display.");
 }
-
-/* IPC and Event handlers --------------------------------------------------------------------------------------------------------------------*/
-/*
-function setupEventHandlers(){              // Event handler setup  
-    eventEmitter.on('fireBtnEvent', function(){       
-        console.log('*** Button pushed do something ***');
-    }); 
-}
-*/
-
-/*
-webInterface.on('message', (mObj) => {      // IPC Communication from Web server
-  console.log('Message from Web:', mObj.methodToCall);
-  mObj = mObj || {};        
-  var methodToCall = mObj.methodToCall || 'No Method Object';
-
-  switch(methodToCall){
-    case 'updateGaugeValues':
-        wxData.updateNow();
-        break;
-    case 'runHourlyReport':
-        //hourleyAlertReport();
-        break;
-    case 'reloadConfigFile':    //called when the Web interface has made a change to the config file. 
-        reloadConfigFile();
-        break;      
-    case 'showColor':
-        arg1 = mObj.arg1 || [1,255,0,0];
-        ledStA.setAllToArrayCLR(arg1); 
-        break;   
-    case 'playAttentionSound':
-        buzzer(200);
-        rpio.msleep(75);
-        buzzer(200);
-        break;
-    case 'showAlphNumBright':
-        arg1 = mObj.arg1;
-        alphNumA.setBright(arg1);
-        alphaNumBrightnessLast = arg1;
-        break;
-    case 'showLedRingBright':
-        arg1 = mObj.arg1;
-        ledStA.setBright(arg1);
-        faceLightBrightnessLast = arg1;
-        break;     
-    case 'getCurrentGaugeStatus':   
-        sendStatusToWeb();
-        break;
-    case 'getCurrentNetCfg':
-        sendNetStatusToWeb();
-        break;
-    case 'wifiStartAdHocNetwork':
-        wifiStartAdHocNetwork();
-        break;
-    case 'wifiSetNewSSID':
-        arg1 = mObj.arg1;
-        arg2 = mObj.arg2;
-        wifiSetNewSSID(arg1, arg2);
-        break;
-    case 'reboot':
-        sendStatusToWeb("Rebooting Please Wait...<hr>A web user has requested a system reboot.");
-        console.log('Shutting down system for reboot');
-        shutDown();
-        console.log('System down rebooting...');
-        alphNumA.prnStrCntrd8("REBOOT");
-        cp.execSync('/sbin/reboot');  
-        break;
-    case 'restoreToFactory':
-        sendStatusToWeb("Restoring Factor Settings...<hr>A web user has requested a system factory restore and reboot.");
-        console.log('Shutting down system for factory restore and reboot');
-        shutDown();
-        console.log('System down restoring factory defaults...');
-        cp.execSync('cp ./rGaugeConfig.master.json ./rGaugeConfig.json'); 
-        alphNumA.prnStrCntrd8("REBOOT");
-        cp.execSync('/sbin/reboot');  
-        break;      
-    case 'getAppUpdate':
-        sendStatusToWeb("Updating Software...<hr>A web user has requested a software update.");
-        console.log('Shutting down system for software update');
-        shutDown();
-        alphNumA.prnStrCntrd8("UPDATING");
-        console.log('System down running updateMe...');
-        cp.execSync('/bin/bash '+__dirname+'/updateMe'); 
-        alphNumA.prnStrCntrd8("REBOOT");
-        cp.execSync('/sbin/reboot');  
-        break;             
-    case 'setServerTime':
-        console.log('Setting server time...' );
-        var serverTime = new Date(mObj.arg1);
-        console.log('--');
-        console.log('cp.execSync(/bin/date -s"' +serverTime.toString() + '")');
-        cp.execSync('/bin/date -s"' +serverTime.toString() + '"');
-        console.log('--');        
-        break;
-    default:
-      console.log('Message from Web: called with unknown command ->' + methodToCall + '<-');
-  }
-});
-*/
 
 process.on( 'SIGINT', function() {          // Shutdow process
     shutDown();
