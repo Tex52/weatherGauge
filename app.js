@@ -39,12 +39,14 @@ mtrA.setValue(25);
 var cfg = JSON.parse(fs.readFileSync('./rGaugeConfig.json'));
 
 console.log('Setting up weather underground data class');
-console.log('API Key = ' + cfg.systemCfg.wuAPIKey +', Station ID = ' + cfg.systemCfg.wuPws + ', Interval = '+ cfg.systemCfg.apiMaxCallDelay);
-const wxData = new wxDta(cfg.systemCfg.wuAPIKey, cfg.systemCfg.wuPws, cfg.systemCfg.apiMaxCallDelay);
+//console.log('API Key = ' + cfg.systemCfg.wuAPIKey +', Station ID = ' + cfg.systemCfg.wuPws + ', Interval = '+ cfg.systemCfg.apiMaxCallDelay);
+console.log('API Key = ' + myCfg.config.wuAPIKey +', Station ID = ' + myCfg.config.wuPws + ', Interval = '+ cfg.systemCfg.apiMaxCallDelay);
+
+const wxData = new wxDta(myCfg.config.wuAPIKey, myCfg.config.wuPws, cfg.systemCfg.apiMaxCallDelay);
 wxData.eventNewData(cb_newWxData);                          // set function to call back when new data is received
 wxData.eventDataRequest(cb_startingWxDataFetch);            // set function to call back when a request for new data starts
 wxData.eventGetDataErr(cb_wxDataFetchError);                // set function to call back when an error occurs getting data
-wxData.getRainHistory(cfg.systemCfg.wuAPIKey, cfg.systemCfg.wuPws, 7);
+wxData.getRainHistory(myCfg.config.wuAPIKey, myCfg.config.wuPws, 7);
 
 // Global Vars
 var apiCallRate = cfg.systemCfg.apiMaxCallDelay;            // Time in seconds of normal poll interveral
@@ -335,7 +337,7 @@ function dailyMaintenance(){                // runs every morning to refresh ite
     updateSunsetSunrise();
     startCronJobs();   
     wxData.updateNow();
-    wxData.getRainHistory(cfg.systemCfg.wuAPIKey, cfg.systemCfg.wuPws, 7);
+    wxData.getRainHistory(myCfg.config.wuAPIKey, myCfg.config.wuPws, 7);
 }
 
 function startCronJobs(){                   // start and stop cron jobs as their configuration changes
@@ -651,7 +653,7 @@ function sendStatusToWeb(ovrRdMsg, ovrRdCat, ovrRdCatTxt ){      // send gauge v
         inQuietModeStatus:inQuietModeStatus,
         inNightModeStatus:inNightModeStatus,
         appVer:package.version,
-        wuPws:cfg.systemCfg.wuPws,
+        wuPws:myCfg.config.wuPws,
         apiCallRate:apiCallRate,
         weatherObj:wxData.wxObj
     };
