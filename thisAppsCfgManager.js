@@ -231,7 +231,7 @@ class appManager extends EventEmitter{
                     var xKey = readObj["KeyToLookup"];
                     console.log("Requesting lookup for key = " + xKey);
                     var xVal = this.config[xKey];
-                    var xJson = {xKey : xVal};
+                    var xJson = {[xKey]:xVal};
                     console.log("Stringifying the following:");
                     console.dir(xJson, {depth:null});
                     var xJsonStr = JSON.stringify(xJson);
