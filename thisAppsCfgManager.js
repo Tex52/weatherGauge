@@ -224,7 +224,16 @@ class appManager extends EventEmitter{
                 this.readConfig.setValue(mOB);
                 this.readConfig.notify();
             } else {
-                console.log('Warnning: gaugeConfig request for record out of range.  Requested record = ' + arg1);
+                try {
+                    //arg1 = {"KeyToLookup":"key name to lookup"} to be saved in modifiedConfig.json
+                    console.log("Checking to see if this is a read request for an object")
+                    var readObj = JSON.parse(arg1);
+                    var xVal = readObj["KeyToLookup"];
+                    console.log("Requesting lookup for key = " + xVal);
+                    
+                } catch {
+                    console.log('Warnning: gaugeConfig request for record out of range.  Requested record = ' + arg1);
+                };
             };
         });
 
