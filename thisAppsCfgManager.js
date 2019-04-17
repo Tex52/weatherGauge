@@ -228,9 +228,17 @@ class appManager extends EventEmitter{
                     //arg1 = {"KeyToLookup":"key name to lookup"} to be saved in modifiedConfig.json
                     console.log("Checking to see if this is a read request for an object")
                     var readObj = JSON.parse(arg1);
-                    var xVal = readObj["KeyToLookup"];
-                    console.log("Requesting lookup for key = " + xVal);
-                    
+                    var xKey = readObj["KeyToLookup"];
+                    console.log("Requesting lookup for key = " + xKey);
+                    var xVal = this.config[xKey];
+                    var xJson = {xKey : xVal};
+                    console.log("Stringifying the following:");
+                    console.dir(xJson, {depth:null});
+                    var xJsonStr = JSON.stringify(xJson);
+                    console.log("setting value to " + xJsonStr);
+
+                    this.readConfig.setValue(xJsonStr);
+                    this.readConfig.notify();
                 } catch {
                     console.log('Warnning: gaugeConfig request for record out of range.  Requested record = ' + arg1);
                 };
