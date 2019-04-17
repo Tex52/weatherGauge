@@ -6,13 +6,13 @@ After=rgMan.service
 [Service]
 Type=dbus
 BusName=com.weatherGauge
-ExecStart=/usr/local/bin/node /opt/rGauge/gList/weatherGauge/app.js
+ExecStart=/usr/bin/sudo /usr/local/bin/node /opt/rGauge/gList/weatherGauge/app.js
 Restart=on-failure
 StandardOutput=syslog
 StandardError=syslog
 SyslogIdentifier=weatherGauge
-User=rgadmin
-Group=rgadmin
+User=root
+Group=root
 Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 Environment=NODE_ENV=production
 WorkingDirectory=/opt/rGauge/gList/weatherGauge
