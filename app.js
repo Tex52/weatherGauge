@@ -40,19 +40,19 @@ var cfg = JSON.parse(fs.readFileSync('./rGaugeConfig.json'));
 
 console.log('Setting up weather underground data class');
 //console.log('API Key = ' + cfg.systemCfg.wuAPIKey +', Station ID = ' + cfg.systemCfg.wuPws + ', Interval = '+ cfg.systemCfg.apiMaxCallDelay);
-console.log('API Key = ' + myCfg.config.wuAPIKey +', Station ID = ' + myCfg.config.wuPws + ', Interval = '+ cfg.systemCfg.apiMaxCallDelay);
+console.log('API Key = ' + myCfg.config.wuAPIKey +', Station ID = ' + myCfg.config.wuPws + ', Interval = '+ myCfg.config.apiMaxCallDelay);
 
-const wxData = new wxDta(myCfg.config.wuAPIKey, myCfg.config.wuPws, cfg.systemCfg.apiMaxCallDelay);
+const wxData = new wxDta(myCfg.config.wuAPIKey, myCfg.config.wuPws, myCfg.config.apiMaxCallDelay);
 wxData.eventNewData(cb_newWxData);                          // set function to call back when new data is received
 wxData.eventDataRequest(cb_startingWxDataFetch);            // set function to call back when a request for new data starts
 wxData.eventGetDataErr(cb_wxDataFetchError);                // set function to call back when an error occurs getting data
 wxData.getRainHistory(myCfg.config.wuAPIKey, myCfg.config.wuPws, 7);
 
 // Global Vars
-var apiCallRate = cfg.systemCfg.apiMaxCallDelay;            // Time in seconds of normal poll interveral
+var apiCallRate = myCfg.config.apiMaxCallDelay;            // Time in seconds of normal poll interveral
 var apiCallCount = 0;
 var eventEmitter = new events.EventEmitter();
-var dfaltViewNum = Number(cfg.systemCfg.dfaltViewNum);
+var dfaltViewNum = Number(myCfg.config.dfaltViewNum);
 var firstRun = 1;
 var BTN1pin = 15;                                           // (Button connected to this pin and ground)
 var LED1pin = 13;                                           // (LED connected to 240 ohm resistor)
@@ -65,7 +65,7 @@ var cronBrightStart = null;
 var cronBrightEnd = null;
 var cronQuietTimeStart = null;
 var cronQuietTimeEnd = null;
-var soundVolume = cfg.systemCfg.soundVolume;                // Volume not used at this time. Stubbed in for future use.
+var soundVolume = myCfg.config.soundVolume;                // Volume not used at this time. Stubbed in for future use.
 var soundVolumeLast;
 var alphaNumBrightnessLast;                                 // Global to hold last brightness setting sent to AlphaNumeric
 var alphaNumOnLast = true;
@@ -93,8 +93,8 @@ console.log("Setting button input on pin has been disabled " + BTN1pin);
 //rpio.poll(BTN1pin, pollcb1);
 LED1setOnOff(1);
 
-alphNumA.setBright(Number(cfg.systemCfg.alphaNumBright));
-alphaNumBrightnessLast = cfg.systemCfg.alphaNumBright;
+alphNumA.setBright(Number(myCfg.config.alphaNumBright));
+alphaNumBrightnessLast = myCfg.config.alphaNumBright;
 
 console.log('Setting speaker volume to ' + soundVolume + '%' );
 setVolume(soundVolume);
@@ -287,8 +287,8 @@ function ctr4CharStr(strToCenter){          // centers a 4 charcter string by ad
 }
 
 function getPrimetimeEvtLoopInterval(){     // Calculates primetime delay interval to stay in budget based on apiMaxCallDealy in rGaugeConfig.json
-    var quietStart = new Date(cfg.systemCfg.quietTimeStart);   
-    var quietEnd =   new Date(cfg.systemCfg.quietTimeEnd);
+    var quietStart = new Date(myCfg.config.quietTimeStart);   
+    var quietEnd =   new Date(myCfg.config.quietTimeEnd);
     var fpEndDec = quietEnd.getHours() + quietEnd.getMinutes() / 60;
     var fpStartDec = quietStart.getHours() + quietStart.getMinutes() / 60;     
     var fpHours = 0;     
@@ -298,7 +298,7 @@ function getPrimetimeEvtLoopInterval(){     // Calculates primetime delay interv
     } else {
         fpHours = fpEndDec - fpStartDec;
     }    
-    return wxData.getMaxPollRate(cfg.systemCfg.apiMaxCallDelay, fpHours * 3600, cfg.systemCfg.apiCallsPerDay);
+    return wxData.getMaxPollRate(myCfg.config.apiMaxCallDelay, fpHours * 3600, myCfg.config.apiCallsPerDay);
 }
 
 function changeWxDataPollInterval(intvrl){  // Changes wxData poll rate
@@ -351,8 +351,8 @@ function startCronJobs(){                   // start and stop cron jobs as their
     //cronHourlyReport = new CronJob('0 0 * * * *', function(){hourleyAlertReport();}, null, true);                // Every Hour run hourly report.    
 
     //Schedule cron for change to Bright Display mode    
-    var timeToFire = new Date(cfg.systemCfg.displayBrightStart);
-    if(cfg.systemCfg.displayBrightStartAtSunrise == true){
+    var timeToFire = new Date(myCfg.config.displayBrightStart);
+    if(myCfg.config.displayBrightStartAtSunrise == 'true'){
         timeToFire = sunriseTime;
     }
     var h = timeToFire.getHours();
@@ -368,8 +368,8 @@ function startCronJobs(){                   // start and stop cron jobs as their
     }, null, true);
 
     //Schedule cron for change to Dim Display mode
-    timeToFire = new Date(cfg.systemCfg.displayBrightEnd);
-    if(cfg.systemCfg.displayBrightEndAtSunset == true){
+    timeToFire = new Date(myCfg.config.displayBrightEnd);
+    if(myCfg.config.displayBrightEndAtSunset == 'true'){
         timeToFire = sunsetTime;
     }
     h = timeToFire.getHours();
@@ -385,7 +385,7 @@ function startCronJobs(){                   // start and stop cron jobs as their
     }, null, true);
 
     //Schedule cron to trigger quiet time start
-    timeToFire = new Date(cfg.systemCfg.quietTimeStart);
+    timeToFire = new Date(myCfg.config.quietTimeStart);
     h = timeToFire.getHours();
     m = timeToFire.getMinutes();
     console.log('cronQuietTimeStart started with (0 '+m+' '+h+' * * *) ');
@@ -399,7 +399,7 @@ function startCronJobs(){                   // start and stop cron jobs as their
     }, null, true);
 
     //Schedule cron to trigger quiet time end
-    timeToFire = new Date(cfg.systemCfg.quietTimeEnd);
+    timeToFire = new Date(myCfg.config.quietTimeEnd);
     h = timeToFire.getHours();
     m = timeToFire.getMinutes();
     console.log('cronQuietTimeEnd started with (0 '+m+' '+h+' * * *) ');
@@ -414,7 +414,7 @@ function startCronJobs(){                   // start and stop cron jobs as their
 }
 
 function _alphanumeric(){                   // Returns true if it is okay to send text to alphanumeric also sets brightness and on/off
-    if(cfg.systemCfg.gaugeDisplayEnable==false  || (inQuietMode()==true && cfg.systemCfg.qtGaugeDisplayEnable==false)){
+    if(myCfg.config.gaugeDisplayEnable=="false"  || (inQuietMode()==true && myCfg.config.qtGaugeDisplayEnable=="false")){
         if(alphaNumOnLast == true){
             console.log('_alphanumeric() turning off Alphanumeric Display');
             alphNumA.displayOn(false);
@@ -430,21 +430,21 @@ function _alphanumeric(){                   // Returns true if it is okay to sen
     }
     // if logic makes it to this point it is okay to be on, need to determine brightness:
     if(inNightMode()){
-        if(alphaNumBrightnessLast != cfg.systemCfg.alphaNumDim){
-            alphNumA.setBright(Number(cfg.systemCfg.alphaNumDim));
-            alphaNumBrightnessLast = cfg.systemCfg.alphaNumDim;
+        if(alphaNumBrightnessLast != myCfg.config.alphaNumDim){
+            alphNumA.setBright(Number(myCfg.config.alphaNumDim));
+            alphaNumBrightnessLast = myCfg.config.alphaNumDim;
         }
     } else {
-        if(alphaNumBrightnessLast != cfg.systemCfg.alphaNumBright){
-            alphNumA.setBright(Number(cfg.systemCfg.alphaNumBright));
-            alphaNumBrightnessLast = cfg.systemCfg.alphaNumBright;
+        if(alphaNumBrightnessLast != myCfg.config.alphaNumBright){
+            alphNumA.setBright(Number(myCfg.config.alphaNumBright));
+            alphaNumBrightnessLast = myCfg.config.alphaNumBright;
         }        
     }
     return true;
 }
 
 function _animation(){                      // Returns true if it is okay to play animation
-    if(inQuietMode()==true && cfg.systemCfg.qtAnimationEnable==false){
+    if(inQuietMode()==true && myCfg.config.qtAnimationEnable=='false'){
         return false;
     } else {
         return true;
@@ -452,7 +452,7 @@ function _animation(){                      // Returns true if it is okay to pla
 }
 
 function _faceLight(){                      // Returns true if it is okay to send color to LED ring and sets brightness
-    if(cfg.systemCfg.faceLightEnable==false  || (inQuietMode()==true && cfg.systemCfg.qtFaceLightEnable==false)){
+    if(myCfg.config.faceLightEnable=='false'  || (inQuietMode()==true && myCfg.config.qtFaceLightEnable=='false')){
         if(faceLightOnLast == true){
             console.log('_faceLight() turning off face light (LED Ring)');
             //ledStA.setRingEnable(false);
@@ -470,32 +470,32 @@ function _faceLight(){                      // Returns true if it is okay to sen
     }
     // if logic makes it to this point it is okay to be on, need to determine brightness:
     if(inNightMode()){
-        if(faceLightBrightnessLast != cfg.systemCfg.faceDim){
-            ledStA.setBright(Number(cfg.systemCfg.faceDim));
-            faceLightBrightnessLast = cfg.systemCfg.faceDim;
+        if(faceLightBrightnessLast != myCfg.config.faceDim){
+            ledStA.setBright(Number(myCfg.config.faceDim));
+            faceLightBrightnessLast = myCfg.config.faceDim;
         }
     } else {
-        if(faceLightBrightnessLast != cfg.systemCfg.faceBright){
-            ledStA.setBright(Number(cfg.systemCfg.faceBright));
-            faceLightBrightnessLast = cfg.systemCfg.faceBright;
+        if(faceLightBrightnessLast != myCfg.config.faceBright){
+            ledStA.setBright(Number(myCfg.config.faceBright));
+            faceLightBrightnessLast = myCfg.config.faceBright;
         }        
     }
     return true;    
 }
 
 function _speaker(){                        // Returns true if it is okay to play wave and sets volume
-    if(cfg.systemCfg.soundEnable==false){
+    if(myCfg.config.soundEnable=='false'){
         console.log('_speaker = disabled');
         return(false); // sound is disabled retrun false assuming noting is playing
     }
     // if logic makes it to this point it is okay to make sound, need to determine volume level:
     if(inQuietMode()){
-        if(soundVolumeLast != cfg.systemCfg.soundVolumeQT){
-            setVolume(Number(cfg.systemCfg.soundVolumeQT));
+        if(soundVolumeLast != myCfg.config.soundVolumeQT){
+            setVolume(Number(myCfg.config.soundVolumeQT));
         }
     } else {
-        if(soundVolumeLast != cfg.systemCfg.soundVolume){
-            setVolume(Number(cfg.systemCfg.soundVolume));
+        if(soundVolumeLast != myCfg.config.soundVolume){
+            setVolume(Number(myCfg.config.soundVolume));
         }  
     }
     return true;    
@@ -503,13 +503,13 @@ function _speaker(){                        // Returns true if it is okay to pla
 
 function inQuietMode(){                     // Determine if system should be in quiet mode based on time settings in systemCfg
     var now = new Date();
-    var quietStart = new Date(cfg.systemCfg.quietTimeStart);   
-    var quietEnd =   new Date(cfg.systemCfg.quietTimeEnd);   
+    var quietStart = new Date(myCfg.config.quietTimeStart);   
+    var quietEnd =   new Date(myCfg.config.quietTimeEnd);   
 
     if(quietEnd.toTimeString() < quietStart.toTimeString()){    // Spans Midnight
         if (now.toTimeString() >= quietStart.toTimeString() || now.toTimeString() < quietEnd.toTimeString()) {
             //console.log('inQuietMode = true');
-            if(apiCallRate != cfg.systemCfg.apiMaxCallDelay){changeWxDataPollInterval(cfg.systemCfg.apiMaxCallDelay);}
+            if(apiCallRate != myCfg.config.apiMaxCallDelay){changeWxDataPollInterval(myCfg.config.apiMaxCallDelay);}
             inQuietModeStatus = true;
             return true;
         } else {
@@ -521,7 +521,7 @@ function inQuietMode(){                     // Determine if system should be in 
     } else {
         if (now.toTimeString() >= quietStart.toTimeString() && now.toTimeString() < quietEnd.toTimeString()) {
             //console.log('inQuietMode = true');
-            if(apiCallRate != cfg.systemCfg.apiMaxCallDelay){changeWxDataPollInterval(cfg.systemCfg.apiMaxCallDelay);}            
+            if(apiCallRate != myCfg.config.apiMaxCallDelay){changeWxDataPollInterval(myCfg.config.apiMaxCallDelay);}            
             inQuietModeStatus = true;
             return true;
         } else {
@@ -535,13 +535,13 @@ function inQuietMode(){                     // Determine if system should be in 
 
 function inNightMode(){                     // Determine if system should be in night moded based on time settings in systmCfg
     var now = new Date();
-    var displayBrightStart = new Date(cfg.systemCfg.displayBrightStart);
-    var displayBrightEnd =   new Date(cfg.systemCfg.displayBrightEnd);
+    var displayBrightStart = new Date(myCfg.config.displayBrightStart);
+    var displayBrightEnd =   new Date(myCfg.config.displayBrightEnd);
 
-    if(cfg.systemCfg.displayBrightStartAtSunrise == true){
+    if(myCfg.config.displayBrightStartAtSunrise == true){
         displayBrightStart = sunriseTime;
     }
-    if(cfg.systemCfg.displayBrightEndAtSunset == true){
+    if(myCfg.config.displayBrightEndAtSunset == true){
         displayBrightEnd = sunsetTime;
     }
 
@@ -618,8 +618,8 @@ function pollcb1(cbpin){                    // function called by RPIO to poll p
 }
 
 function updateSunsetSunrise(){             // Sets global sunriseTime and sunsetTime 
-    var lat = Number(cfg.systemCfg.latitude);
-    var long = Number(cfg.systemCfg.longitude);    
+    var lat = Number(myCfg.config.latitude);
+    var long = Number(myCfg.config.longitude);    
     var sunTimes = sunCalc.getTimes(new Date(), lat, long);
     sunriseTime = new Date(sunTimes.sunrise);
     sunriseTime.setSeconds(0,0);
@@ -632,7 +632,7 @@ function updateSunsetSunrise(){             // Sets global sunriseTime and sunse
 function reloadConfigFile(){                // reread rGaugeConfig.json to make new values current
     console.log(`Reloading config file.`);
     cfg = JSON.parse(fs.readFileSync('./rGaugeConfig.json'));
-    dfaltViewNum = Number(cfg.systemCfg.dfaltViewNum);
+    dfaltViewNum = Number(myCfg.config.dfaltViewNum);
     startCronJobs();  
     _alphanumeric();
     _faceLight();  
