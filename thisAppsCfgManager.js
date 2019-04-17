@@ -135,7 +135,8 @@ class appManager extends EventEmitter{
             this.modifiedConfigMaster = JSON.parse(fs.readFileSync(this.modifiedConfigFilePath))
         };
         this.config = {...this.defaultConfigMaster, ...this.modifiedConfigMaster};
-        this.readConfig.setValue(JSON.stringify(this.config));
+        this.readConfig.setValue(Object.keys(this.config).length.toString());
+        this.readConfig.notify()
         console.log('firing "Update" event...');
         this.emit('Update');
     };
