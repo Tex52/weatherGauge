@@ -8,7 +8,7 @@ var self;
  * This class provides an interface to the gauge’s factory default configuration settings. Typically, these settings are stored in a file called gaugeConfig.json, with user modifications to the factory defaults in a file called modifiedConfig.json. 
  * This class also provides a frontend to the blePeripheral class in the setGaugeStatus and setGaugeValue methods.
  * 
- * ** * gaugConfig.json must have key fields such as UUID and dBusName and conform to a JSON format.  emits Update when config has been changed **
+ * ** * gaugConfig.json must have key fields such as UUID and dBusName and conform to a JSON format.  Emits Update when config has been changed **
  * 
  * typical setup call ->const myAppMan = new AppMan(__dirname + '/gaugeConfig.json', __dirname + '/modifiedConfig.json');<-
  * 
@@ -181,7 +181,7 @@ class appManager extends EventEmitter{
                 case "10":
                     var dirToUpdate = __dirname;
                     console.log("Updating files in " + dirToUpdate);
-                    updateAnyApp(dirToUpdate, (status)=>{gaugeCommand.notify(status)});
+                    updateAnyApp(dirToUpdate, (status)=>{this.gaugeCommand.notify(status)});
                 break;
 
                 case "20":   
