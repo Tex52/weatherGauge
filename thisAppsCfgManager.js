@@ -153,7 +153,7 @@ class appManager extends EventEmitter{
         this.appVer =       this.bPrl.Characteristic('001d6a44-2551-4342-83c9-c18a16a3afa5', 'appVer', ["encrypt-read"]);
         this.gaugeStatus =  this.bPrl.Characteristic('002d6a44-2551-4342-83c9-c18a16a3afa5', 'gaugeStatus', ["encrypt-read","notify"]);
         this.gaugeValue =   this.bPrl.Characteristic('003d6a44-2551-4342-83c9-c18a16a3afa5', 'gaugeValue', ["encrypt-read","notify"]);
-        this.gaugeCommand = this.bPrl.Characteristic('004d6a44-2551-4342-83c9-c18a16a3afa5', 'gaugeCommand', ["encrypt-read","encrypt-write"]);
+        this.gaugeCommand = this.bPrl.Characteristic('004d6a44-2551-4342-83c9-c18a16a3afa5', 'gaugeCommand', ["encrypt-read","encrypt-write","notify"]);
         this.readConfig =   this.bPrl.Characteristic('3ddc0611-272e-4669-80b4-6989687eb1dd', 'readConfig', ["encrypt-read","encrypt-write","notify"]);
         this.writeConfig =  this.bPrl.Characteristic('8f92ddf7-dbf2-481d-8e9f-14f37ca7dcef', 'writeConfig', ["encrypt-write"]);
     
@@ -177,7 +177,13 @@ class appManager extends EventEmitter{
                         cmdResult='Warning: Custom configuration file not found.'
                     };                   
                 break;
-                    
+
+                case "10":
+                    var dirToUpdate = __dirname;
+                    console.log("Updating files in " + dirToUpdate);
+                    updateAnyApp(dirToUpdate, (status)=>{gaugeCommand.notify(status)});
+                break;
+
                 case "20":   
                     console.log('Test: Flag Alert to rgMan');
                     this.sendAlert({[this.config.descripition]:"1"});
@@ -258,7 +264,73 @@ class appManager extends EventEmitter{
         this.gaugeStatus.setValue(this.status)
         this.readConfig.setValue(Object.keys(this.config).length.toString());
     };
+};
 
+function updateAnyApp(appDir, log = (val)=>{console.log('--> '+val+' <--')}, postUpdateScript = ''){
+    console.log('_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_');
+    console.log('Updating App in : ' + appDir);
+
+    if(!fs.existsSync(appDir)){
+        var errTxt = 'Error! Directory ' + appDir + ', does not exist. Update terminated.'
+        console.log(errTxt);
+        log(errTxt);
+        return 1;
+    };
+
+    try {
+        var resultStr = null;
+        var str = ('Updating applicaiton from ' + appDir);
+        log(str);
+        cp.execSync('/usr/bin/git reset --hard', {cwd: appDir, stdio: 'inherit'});
+        var resultStr = cp.execSync('/usr/bin/git pull', {cwd: appDir, stdio: 'inherit'});
+        if (resultStr){
+            log('git pull result: ' + resultStr);
+        };
+
+        str = 'Updated main app. Starting update of all dependencies this will take some time...';
+        log(str);
+        try {
+            resultStr = null;
+            resultStr = cp.execSync('/usr/local/bin/npm update', {cwd: appDir, stdio: 'inherit'});
+            if (resultStr){
+                log('npm update result: ' + resultStr);
+            };
+
+            if(postUpdateScript != ''){
+                console.log('Running post upgrade script ->' + postUpdateScript);
+                log('Running post upgrade script ->' + postUpdateScript);
+                if(fs.existsSync(postUpdateScript)){
+                    resultStr = null;
+                    resultStr = cp.execSync(postUpdateScript, {cwd: appDir, stdio: 'inherit'});
+                    if (resultStr){
+                        log('post update script result: ' + resultStr);
+                    };
+                } else {
+                    console.log('Error!  Post update script ' + postUpdateScript + ' not found.');
+                    log('Error!  Post update script ' + postUpdateScript + ' not found.');
+                };
+            };
+
+            var str = '->Update process complete.<-';
+            console.log(str);
+            log(str);
+
+        } catch(err) {
+            console.log('Error running npm update command. Error details follow');
+            console.log(err.toString());
+            log('Error running npm update command. Error details follow');
+            log(err.toString());
+        };
+
+    } catch(err) {
+        console.log('Update error with git pull command.  Error details follow:');
+        console.log(err.toString());
+        log('Update error with git pull command.  Error details follow:');
+        log(err.toString());
+    };
+
+    console.log('_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_');
+    return 0;
 };
 
 module.exports = appManager;
