@@ -264,6 +264,7 @@ class appManager extends EventEmitter{
         this.gaugeValue.setValue(this.value);
         this.gaugeStatus.setValue(this.status)
         this.readConfig.setValue(Object.keys(this.config).length.toString());
+        this.appType.setValue("wugIBM");
     };
 };
 
