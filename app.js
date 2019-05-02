@@ -205,6 +205,13 @@ function setFaceColor(faceColorToSet){      // Sets LED ring color based on colo
 } 
 
 function lastRainEventTotal(arrayDlyAmt){   // Sums array until first 0 value is found. Returns sum
+    console.log('*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/')
+    console.log('\t\t*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/')    
+    console.log('lastRainEventTotal called with');
+    console.dir(arrayDlyAmt, {depth:null});
+    console.log('\t\t*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/')  
+
+    
     if(Number(arrayDlyAmt[0]) == 0){return 0};
     var eventTotal = 0;
     for (var index = 0; index < arrayDlyAmt.length; index++) {
