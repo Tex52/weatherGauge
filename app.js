@@ -46,7 +46,7 @@ const wxData = new wxDta(myCfg.config.wuAPIKey, myCfg.config.wuPws, myCfg.config
 wxData.eventNewData(cb_newWxData);                          // set function to call back when new data is received
 wxData.eventDataRequest(cb_startingWxDataFetch);            // set function to call back when a request for new data starts
 wxData.eventGetDataErr(cb_wxDataFetchError);                // set function to call back when an error occurs getting data
-wxData.getRainHistory(myCfg.config.wuAPIKey, myCfg.config.wuPws, 7);
+wxData.getRainHistory();
 
 // Global Vars
 var apiCallRate = myCfg.config.apiMaxCallDelay;            // Time in seconds of normal poll interveral
@@ -98,8 +98,8 @@ var countDownSeconds = 61;
 mtrA.setValue(60);
 var countDownTimer = setInterval(function(){countDownToFirstUpload()}, 1000);    //IPL complete after this counter 
 
-var crondailyMaintenance = new CronJob('0 55 2 * * *', function(){dailyMaintenance()}, null, true);     // Every day at 2:55am get river flow data.
-var resetdailCounters = new CronJob('0 0 0 * * *', function(){apiCallCount = 0;}, null, true);          // Every day at midnight.
+var crondailyMaintenance = new CronJob('0 55 2 * * *', ()=>{dailyMaintenance()}, null, true);     // Every day at 2:55am get river flow data.
+var resetdailCounters = new CronJob('0 0 0 * * *', ()=>{apiCallCount = 0;}, null, true);          // Every day at midnight.
 
 
 /* Presentation ------------------------------------------------------------------------------------------------------------------------------*/
@@ -289,7 +289,7 @@ function dailyMaintenance(){                // runs every morning to refresh ite
     updateSunsetSunrise();
     startCronJobs();   
     wxData.updateNow();
-    wxData.getRainHistory(myCfg.config.wuAPIKey, myCfg.config.wuPws, 7);
+    wxData.getRainHistory();
 }
 
 function startCronJobs(){                   // start and stop cron jobs as their configuration changes
