@@ -107,6 +107,7 @@ function showData(viewNum){                 // set the display face to various s
     var dateTime = new Date();
     var rainSum = 0
     rainSum = lastRainEventTotal(wxData.wxObj.history.rainDaysOld);
+    console.log('rainSum = ' + rainSum);
     console.log ('showLvl called at ' + dateTime.toTimeString());
 
    setFaceColor([31,255,108,23])
@@ -211,7 +212,7 @@ function lastRainEventTotal(arrayDlyAmt){   // Sums array until first 0 value is
     console.dir(arrayDlyAmt, {depth:null});
     console.log('\t\t*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/')  
 
-    
+
     if(Number(arrayDlyAmt[0]) == 0){return 0};
     var eventTotal = 0;
     for (var index = 0; index < arrayDlyAmt.length; index++) {
