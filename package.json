@@ -1,6 +1,6 @@
 {
   "name": "weather-gauge",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Displays weather information from weather underground on Raspberry Pi based gauge.  See http://github.com/RuckerGauge.com for details",
   "main": "app.js",
   "dependencies": {

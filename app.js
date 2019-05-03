@@ -213,9 +213,9 @@ function lastRainEventTotal(arrayDlyAmt){   // Sums array until first 0 value is
     console.log('\t\t*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/')  
 
 
-    if(Number(arrayDlyAmt[0]) == 0){return 0};
+    if(Number(arrayDlyAmt[1]) == 0){return 0};
     var eventTotal = 0;
-    for (var index = 0; index < arrayDlyAmt.length; index++) {
+    for (var index = 1; index < arrayDlyAmt.length; index++) {
         if(Number(arrayDlyAmt[index]) == 0){
             return eventTotal;
         } else {
