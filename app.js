@@ -534,7 +534,7 @@ function sendStatusToMyCfg(ovrRdMsg, ovrRdCat, ovrRdCatTxt ){      // send gauge
     if(stateMsg == ''){
         myCfg.setGaugeStatus('Okay ' + (new Date()).toLocaleTimeString() + ' ' + (new Date()).toLocaleDateString());
         myCfg.setGaugeValue(wxData.wxObj.temp_f + 'F ' +
-        wxData.wxObj.wind_mph + 'MPH ' +
+        wxData.wxObj.wind_mph + 'mph ' +
         wxData.wxObj.precip_today_in + '"' );
     } else {
         myCfg.setGaugeStatus(stateMsg)
