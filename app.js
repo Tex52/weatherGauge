@@ -1,9 +1,9 @@
-var fs =                require('fs');
+//var fs =                require('fs');
 var stprCal =           require('./stepperCalibration.json');
-var events =            require('events');
+//var events =            require('events');
 var rpio =              require('rpio');
 var CronJob =           require('cron').CronJob;
-var cp =                require('child_process');
+//var cp =                require('child_process');
 var sunCalc =           require('suncalc');
 var package =           require('./package.json')
 
@@ -532,7 +532,7 @@ function sendStatusToMyCfg(ovrRdMsg, ovrRdCat, ovrRdCatTxt ){      // send gauge
 
     var stateMsg = ovrRdMsg || ''
     if(stateMsg == ''){
-        myCfg.setGaugeStatus('Okay, ' + (new Date()).toLocaleTimeString() + ', ' + (new Date()).toLocaleDateString());
+        myCfg.setGaugeStatus('Okay ' + (new Date()).toLocaleTimeString() + ' ' + (new Date()).toLocaleDateString());
         myCfg.setGaugeValue(wxData.wxObj.temp_f + 'F, ' + (new Date()).toLocaleTimeString() + ', ' + (new Date()).toLocaleDateString());
     } else {
         myCfg.setGaugeStatus(stateMsg)
